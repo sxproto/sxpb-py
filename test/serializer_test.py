@@ -352,6 +352,17 @@ def test_string_whitespace_roundtrip(indent):
     assert sxpb.loads(sxpb.dumps(data, indent=indent), precise=True) == data
 
 
+def test_canonical_string_escapes():
+    value = '"\\\t\n\v\f\r literal \\u000b'
+    quoted = r'"\"\\\t\n\v\f\r literal \\u000b"'
+    data = {value: value, "array": [value]}
+    encoded = sxpb.dumps(data, indent=0)
+    assert encoded == f"({quoted} {quoted}) (array (()) {quoted})"
+    assert sxpb.loads(encoded, precise=True) == data
+    nest = sxpb.Nest([value])
+    assert sxpb.loads(sxpb.dumps(nest), precise=True) == nest
+
+
 def test_canonical_quoted_field_names():
     data = {"two words": "ok", "1": "one"}
     assert sxpb.dumps(data, indent=0) == '("two words" ok) ("1" one)'

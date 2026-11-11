@@ -1,4 +1,3 @@
-import json
 import re
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -141,6 +140,23 @@ def _has_bare_prefix(s: str) -> bool:
     return bool(_BARE_PREFIX_FULL_RE.fullmatch(s))
 
 
+_ESCAPED_BY_CHAR = str.maketrans(
+    {
+        '"': '\\"',
+        "\\": "\\\\",
+        "\t": "\\t",
+        "\n": "\\n",
+        "\v": "\\v",
+        "\f": "\\f",
+        "\r": "\\r",
+    }
+)
+
+
+def _quote_string(s: str) -> str:
+    return f'"{s.translate(_ESCAPED_BY_CHAR)}"'
+
+
 def _format_atom(
     v, in_array: bool = False, in_nest_string: bool = False, is_key: bool = False
 ):
@@ -156,13 +172,13 @@ def _format_atom(
 
     # Keys cannot have spaces (unless quoted).
     if is_key and " " in s:
-        return json.dumps(s, ensure_ascii=False)
+        return _quote_string(s)
 
     if in_array and " " in s:
-        return json.dumps(s, ensure_ascii=False)
+        return _quote_string(s)
 
     if not _is_plain_string(s) or not _has_bare_prefix(s):
-        return json.dumps(s, ensure_ascii=False)
+        return _quote_string(s)
     return s
 
 
@@ -176,7 +192,7 @@ def _format_nest_string(s: str) -> str:
 
     for part in parts:
         is_bare = _is_plain_string(part) and _has_bare_prefix(part)
-        token = part if is_bare else json.dumps(part, ensure_ascii=False)
+        token = part if is_bare else _quote_string(part)
         tokens.append((token, is_bare))
 
     if not tokens:
