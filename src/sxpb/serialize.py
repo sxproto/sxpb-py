@@ -110,19 +110,24 @@ def _join_condensed(parts: list[str]) -> str:
 
 
 # A string is "plain" if all of its characters match this regex.
-_PLAIN_STRING_RE = re.compile(r"^[^\t\n\v\f\r;\"()]+$")
+_PLAIN_STRING_FULL_RE = re.compile(r"[^\t\n\v\f\r;\"()]+")
 
 
 def _is_plain_string(s: str) -> bool:
     """Checks if a string consists entirely of 'plain' characters."""
     if not s:
         return False
-    return bool(_PLAIN_STRING_RE.match(s))
+    return (
+        bool(_PLAIN_STRING_FULL_RE.fullmatch(s))
+        and not s.startswith(" ")
+        and not s.endswith(" ")
+        and "  " not in s
+    )
 
 
 # This regex matches strings that have a valid BARE prefix according to the grammar.
-_BARE_PREFIX_RE = re.compile(
-    r"^([-.]?[^-+.0123456789 \t\n\v\f\r;\"()]|[-][-]|[.][.]|[-]$|[.]$)"
+_BARE_PREFIX_FULL_RE = re.compile(
+    r"([-.]?[^-+.0123456789 \t\n\v\f\r;\"()].*|[-][-].*|[.][.].*|[-]|[.])"
 )
 
 
@@ -133,7 +138,7 @@ def _has_bare_prefix(s: str) -> bool:
     """
     if not s:
         return False
-    return bool(_BARE_PREFIX_RE.match(s))
+    return bool(_BARE_PREFIX_FULL_RE.fullmatch(s))
 
 
 def _format_atom(

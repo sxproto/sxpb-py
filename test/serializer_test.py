@@ -339,6 +339,19 @@ def test_canonical_string_atoms():
     assert sxpb.dumps(data, indent=0) == expected_output
 
 
+@pytest.mark.parametrize("indent", [-1, 0, 2])
+def test_string_whitespace_roundtrip(indent):
+    data = {
+        "final_lf": "a\n",
+        "leading_space": " a",
+        "trailing_space": "a ",
+        "repeated_spaces": "a  b",
+        "control_whitespace": "a\tb\nc\vd\fe\rf",
+    }
+    data["array"] = list(data.values())
+    assert sxpb.loads(sxpb.dumps(data, indent=indent), precise=True) == data
+
+
 def test_canonical_quoted_field_names():
     data = {"two words": "ok", "1": "one"}
     assert sxpb.dumps(data, indent=0) == '("two words" ok) ("1" one)'
